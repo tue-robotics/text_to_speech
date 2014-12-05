@@ -59,14 +59,15 @@ class TTS(object):
 
         filename = "/tmp/speech.wav"
 
-        command = self.executable + " -i /tmp/temp_speech_text2.txt -k " + self.key + " -o {0}".format(filename)
+        command = self.executable + " -i /tmp/temp_speech_text2.txt -k " + self.key + " -o {0}".format(filename) + " > /dev/null 2>&1"
         
         os.system(command)
         
         rospy.logdebug(".wav file created: {0}".format(filename))
 
         # Play the file, gst-launch-0.10 is 0.4 seconds faster than aplay
-        ret = os.system("play {0} pitch {1}".format(filename, self.pitch))
+        #ret = os.system("play {0} pitch {1}".format(filename, self.pitch))
+        ret = os.system("aplay %s > /dev/null 2>&1"%filename)
         #ret = os.system("gst-launch-0.10 filesrc location='{0}' ! wavparse ! audioconvert ! audioresample ! autoaudiosink".format(filename))
         rospy.logdebug(".wav file played, removing temporary files")
 
@@ -80,7 +81,7 @@ class TTS(object):
 
         try:
             save_filename = '/tmp/'+text.replace(" ", "_") + '.wav'
-            rospy.loginfo("Saving speech to {0}".format(save_filename))
+            rospy.logdebug("Saving speech to {0}".format(save_filename))
             os.system("mv {0} {1}".format(filename, save_filename))
         except Exception, e:
             rospy.logerr("Could not save speech to a new file: '{0}'".format(e, filename, save_filename))
@@ -88,7 +89,7 @@ class TTS(object):
         return True
 
     def do_tts_festival(self, text, character, language, voice, emotion):
-        command = "echo \"" + text + "\" | text2wave -o /tmp/festival.wav; play /tmp/festival.wav pitch " + str(self.pitch)
+        command = "echo \"" + text + "\" | text2wave -o /tmp/festival.wav; aplay /tmp/festival.wav pitch " + str(self.pitch)
         os.system(command)
 
     def step(self):
