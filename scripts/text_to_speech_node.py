@@ -67,7 +67,7 @@ class TTS(object):
 
         # Play the file, gst-launch-0.10 is 0.4 seconds faster than aplay
         #ret = os.system("play {0} pitch {1}".format(filename, self.pitch))
-        ret = os.system("aplay %s > /dev/null 2>&1"%filename)
+        ret = os.system("play %s > /dev/null 2>&1"%filename)
         #ret = os.system("gst-launch-0.10 filesrc location='{0}' ! wavparse ! audioconvert ! audioresample ! autoaudiosink".format(filename))
         rospy.logdebug(".wav file played, removing temporary files")
 
@@ -89,7 +89,7 @@ class TTS(object):
         return True
 
     def do_tts_festival(self, text, character, language, voice, emotion):
-        command = "echo \"" + text + "\" | text2wave -o /tmp/festival.wav; aplay /tmp/festival.wav pitch " + str(self.pitch)
+        command = "echo \"" + text + "\" | text2wave -o /tmp/festival.wav; play /tmp/festival.wav pitch " + str(self.pitch)
         os.system(command)
 
     def step(self):
