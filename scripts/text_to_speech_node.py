@@ -17,16 +17,16 @@ class TTS(object):
         self.key = key
         self.pitch = pitch
         
-        self.character   = rospy.get_param("/text_to_speech/character",  "Default")
-        self.language    = rospy.get_param("/text_to_speech/language",   "us")
-        self.voice       = rospy.get_param("/text_to_speech/voice",      "kyle")
-        self.emotion     = rospy.get_param("/text_to_speech/emotion",    "Neutral")
+        self.character   = rospy.get_param("~character",  "Default")
+        self.language    = rospy.get_param("~language",   "us")
+        self.voice       = rospy.get_param("~voice",      "kyle")
+        self.emotion     = rospy.get_param("~emotion",    "Neutral")
 
-        self.sub_speak  = rospy.Subscriber("/text_to_speech/input", String, self.speak)
+        self.sub_speak  = rospy.Subscriber("~input", String, self.speak)
 
-        self.srv_get_status =   rospy.Service('/text_to_speech/get_status',     GetStatus,              self.get_status_srv)
-        self.srv_speak =        rospy.Service('/text_to_speech/speak',          Speak,                  self.speak_srv)
-        self.srv_clear_buffer = rospy.Service('/text_to_speech/clear_buffer',   Empty,                  self.clear_buffer_srv)
+        self.srv_get_status =   rospy.Service('~get_status',     GetStatus,              self.get_status_srv)
+        self.srv_speak =        rospy.Service('~speak',          Speak,                  self.speak_srv)
+        self.srv_clear_buffer = rospy.Service('~clear_buffer',   Empty,                  self.clear_buffer_srv)
 
         self.buffer = []
         self.is_playing = False
