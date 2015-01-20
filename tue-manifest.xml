@@ -1,5 +1,0 @@
-<deps>
-    <library name="festival" type="system"/>
-    <library name="sox" type="system"/> <!-- for changing pitch -->
-</deps>
-
