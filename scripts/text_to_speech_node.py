@@ -82,7 +82,7 @@ class TTS(object):
         os.system("iconv -f utf8 -t iso-8859-15 </tmp/temp_speech_text.txt >/tmp/temp_speech_text2.txt")
         rospy.logdebug("File converted: /tmp/temp_speech_text2.txt")
 
-        filename = "/tmp/%s.wav"%''.join(ch for ch in text if ch.isalnum())
+        filename = "/tmp/speech.wav"
 
         command = self.executable + " -i /tmp/temp_speech_text2.txt -k " + self.key + " -o {0}".format(filename) + " > /dev/null 2>&1"
 
