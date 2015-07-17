@@ -105,7 +105,7 @@ class TTS(object):
             rospy.logerr("A file could not be removed: {0}".format(ose))
 
         try:
-            save_filename = '/tmp/'+text.replace(" ", "_") + '.wav'
+            save_filename = '/tmp/'+ ''.join(ch for ch in text if ch.isalnum()) + '.wav'
             rospy.logdebug("Saving speech to {0}".format(save_filename))
             os.system("mv {0} {1}".format(filename, save_filename))
         except Exception, e:
