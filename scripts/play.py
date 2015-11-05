@@ -25,8 +25,8 @@ def main():
         req.audio_data = open(filename, "rb").read()
         req.blocking_call = False
 
-        req.pitch = -200
-        
+        req.pitch = 0
+
         resp = srv_play(req)
         print resp
     except rospy.ServiceException, e:
