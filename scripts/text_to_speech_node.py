@@ -12,7 +12,7 @@ import os
 from subprocess import Popen, PIPE
 from std_msgs.msg import String
 from std_srvs.srv import Empty
-from text_to_speech.srv import GetStatus, Speak, SpeakRequest
+from text_to_speech.srv import GetStatus, Speak, SpeakRequest, Play, PlayRequest
 
 
 class bcolors:
@@ -43,39 +43,34 @@ class TTS(object):
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
 
         # services
-        self.srv_get_status   = rospy.Service('~get_status',   GetStatus, self.get_status_srv)
         self.srv_speak        = rospy.Service('~speak',        Speak,     self.speak_srv)
-        self.srv_clear_buffer = rospy.Service('~clear_buffer', Empty,     self.clear_buffer_srv)
 
-        # buffering tts requests
-        self.buffer = []
-        self.is_playing = False
+        # clients
+        self.client_play = rospy.ServiceProxy('play', Play)
 
         # the current active module (philips or festival)
         self.tts_module = tts_module
 
-    def do_tts(self, text, character, language, voice, emotion):
-        rospy.loginfo('TTS: "' + bcolors.OKBLUE + text + bcolors.ENDC + '"')
+
+
+    def do_tts(self, req):
+        rospy.loginfo('TTS: "' + bcolors.OKBLUE + req.sentence + bcolors.ENDC + '"')
         rospy.logdebug(
             "TTS: '{0}' (module: '{1}', character: '{2}', language: '{3}', voice: '{4}', emotion: '{5}')"
-            .format(text, self.tts_module, character, language, voice, emotion)
+            .format(req.sentence, self.tts_module, req.character, req.language, req.voice, req.emotion)
         )
 
-        self.is_playing = True
-
         if self.tts_module == "philips":
-            self.do_tts_philips(text, character, language, voice, emotion)
+            self.do_tts_philips(req)
         else:
-            self.do_tts_festival(text, character, language, voice, emotion)
+            self.do_tts_festival(req)
 
-        self.is_playing = False
-
-    def do_tts_philips(self, text, character, language, voice, emotion):
+    def do_tts_philips(self, req):
         tts_file = file("/tmp/temp_speech_text.txt", "w")
 
-        tts_file.write("¬<" + character + ">" + '\n') # Add character
-        tts_file.write("¬<speaker=" + language + "_" + voice + ">" + '\n') # Add language + voice
-        tts_file.write("¬<" + emotion + ">" + text)
+        tts_file.write("¬<" + req.character + ">" + '\n') # Add character
+        tts_file.write("¬<speaker=" + req.language + "_" + req.voice + ">" + '\n') # Add language + voice
+        tts_file.write("¬<" + req.emotion + ">" + req.sentence)
         tts_file.close()
         rospy.logdebug("File created: /tmp/temp_speech_text.txt")
 
@@ -90,10 +85,17 @@ class TTS(object):
 
         rospy.logdebug(".wav file created: {0}".format(filename))
 
-        # Play the file, gst-launch-0.10 is 0.4 seconds faster than aplay
-        # ret = os.system("play {0} pitch {1}".format(filename, self.pitch))
-        ret = os.system("play %s > /dev/null 2>&1" % filename)
-        # ret = os.system("gst-launch-0.10 filesrc location='{0}' ! wavparse ! audioconvert ! audioresample ! autoaudiosink".format(filename))
+        # Play sound
+        play_req = PlayRequest()
+        play_req.audio_data = open(filename, "rb").read()
+        play_req.audio_type = "wav"
+        play_req.blocking_call = req.blocking_call
+        play_req.pitch = 0
+        resp = self.client_play(play_req)
+
+        if resp.error_msg:
+            rospy.logerr("Could not play sound: %s", resp.error_msg)
+
         rospy.logdebug(".wav file played, removing temporary files")
 
         try:
@@ -105,7 +107,7 @@ class TTS(object):
             rospy.logerr("A file could not be removed: {0}".format(ose))
 
         try:
-            save_filename = '/tmp/'+ ''.join(ch for ch in text if ch.isalnum()) + '.wav'
+            save_filename = '/tmp/'+ ''.join(ch for ch in req.sentence if ch.isalnum()) + '.wav'
             rospy.logdebug("Saving speech to {0}".format(save_filename))
             os.system("mv {0} {1}".format(filename, save_filename))
         except Exception, e:
@@ -113,8 +115,10 @@ class TTS(object):
 
         return True
 
-    def do_tts_festival(self, text, character, language, voice, emotion):
-        command = "echo \"" + text + "\" | text2wave -o /tmp/festival.wav; play /tmp/festival.wav pitch " + str(self.pitch)
+    def do_tts_festival(self, req):
+        filename = "/tmp/festival.wav"
+
+        command = "echo \"%s\" | text2wave -o %s" % (req.sentence, filename)
         rospy.logdebug(command)
 
         p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
@@ -125,19 +129,13 @@ class TTS(object):
             rospy.logwarn(stdout)
         rospy.logdebug(stderr)
 
-    def step(self):
-        if not self.buffer or self.is_playing:
-            return
-
-        # Get first request from the buffer
-        req = self.buffer[0]
-
-        # text to speech (blocking)
-        self.do_tts(req.sentence, req.character, req.language, req.voice, req.emotion)
-
-        # If the buffer was not emptied in the meantime, pop the first request
-        if self.buffer:
-            self.buffer.pop(0)
+        # Play sound
+        play_req = PlayRequest()
+        play_req.audio_data = open(filename, "rb").read()
+        play_req.audio_type = "wav"
+        play_req.blocking_call = req.blocking_call
+        play_req.pitch = 0
+        resp = self.client_play(play_req)
 
     def speak(self, sentence_msg):
         req = SpeakRequest()
@@ -146,29 +144,13 @@ class TTS(object):
         req.language = self.language
         req.voice = self.voice
         req.emotion = self.emotion
+        req.blocking_call = False
 
         self.buffer += [req]
-
-    def speak_old_srv(self, req):
-        self.do_tts(req.sentence, req.character, req.language, req.voice, req.emotion)
-        return True
-
-    def get_status_srv(self, req):
-        return [[str(req.sentence) for req in self.buffer]]
 
     def speak_srv(self, req):
-        self.buffer += [req]
-
-        if req.blocking_call:
-            while not rospy.is_shutdown() and self.buffer:
-                self.step()
-                rospy.sleep(0.1)
-
+        self.do_tts(req)
         return ""
-
-    def clear_buffer_srv(self, req):
-        self.buffer = []
-        return []
 
 if __name__ == "__main__":
     rospy.init_node('text_to_speech')
@@ -192,6 +174,4 @@ if __name__ == "__main__":
 
     tts = TTS(tts_module, executable, key, pitch)
 
-    while not rospy.is_shutdown():
-        tts.step()
-        rospy.sleep(0.1)
+    rospy.spin()

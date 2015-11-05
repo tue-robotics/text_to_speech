@@ -56,6 +56,7 @@ add_service_files(
   FILES
   GetStatus.srv
   Speak.srv
+  Play.srv
 )
 
 ## Generate actions in the 'action' folder
