@@ -146,7 +146,7 @@ class TTS(object):
         req.emotion = self.emotion
         req.blocking_call = False
 
-        self.buffer += [req]
+        self.do_tts(req)
 
     def speak_srv(self, req):
         self.do_tts(req)
