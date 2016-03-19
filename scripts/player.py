@@ -14,7 +14,7 @@ from text_to_speech.srv import Play
 
 class Player(object):
 
-    def __init__(self):        
+    def __init__(self):
         # services
         self.srv_play         = rospy.Service('play',         Play,      self.play_srv)
         self.srv_clear_buffer = rospy.Service('clear_buffer', Empty,     self.clear_buffer_srv)
@@ -22,7 +22,7 @@ class Player(object):
         # buffer audio requests
         self.buffer = []
         self.is_playing = False
-        
+
     def play_srv(self, req):
         if req.audio_type not in ["wav"]:
             return "Audio format '%s' not supported" % req.audio_type
@@ -32,7 +32,7 @@ class Player(object):
         if req.blocking_call:
             while not rospy.is_shutdown() and self.buffer:
                 self.step()
-                rospy.sleep(0.1)
+                rospy.sleep(0.01)
 
         return ""
 
@@ -45,7 +45,7 @@ class Player(object):
         with open(filename, "wb") as f:
             f.write(bytearray(req.audio_data))
 
-        err_code = os.system("play %s pitch %i > /dev/null 2>&1" % (filename, req.pitch))    
+        err_code = os.system("play %s pitch %i > /dev/null 2>&1" % (filename, req.pitch))
 
         if err_code:
             rospy.logerr("Could not play %s: return code: %i" % (filename, err_code))
