@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
 '''
 This node listens to a service call and a topic for text to speech
@@ -13,7 +13,11 @@ from subprocess import Popen, PIPE
 from std_msgs.msg import String
 from std_srvs.srv import Empty
 from text_to_speech.srv import GetStatus, Speak, SpeakRequest, Play, PlayRequest
+import re
+import sys  
 
+reload(sys)  
+sys.setdefaultencoding('utf8')
 
 class bcolors:
     HEADER = '\033[95m'
@@ -55,7 +59,7 @@ class TTS(object):
 
     def do_tts(self, req):
         rospy.loginfo('TTS: "' + bcolors.OKBLUE + req.sentence + bcolors.ENDC + '"')
-        rospy.logdebug(
+        rospy.loginfo(
             "TTS: '{0}' (module: '{1}', character: '{2}', language: '{3}', voice: '{4}', emotion: '{5}')"
             .format(req.sentence, self.tts_module, req.character, req.language, req.voice, req.emotion)
         )
@@ -66,28 +70,35 @@ class TTS(object):
             self.do_tts_festival(req)
 
     def do_tts_philips(self, req):
-        tts_file = file("/tmp/temp_speech_text.txt", "w")
+        text  = "¬<" + req.character + ">" + '\n' # Add character
+        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n' # Add language + voice
+        text += "¬<" + req.emotion + ">" + req.sentence
 
-        tts_file.write("¬<" + req.character + ">" + '\n') # Add character
-        tts_file.write("¬<speaker=" + req.language + "_" + req.voice + ">" + '\n') # Add language + voice
-        tts_file.write("¬<" + req.emotion + ">" + req.sentence)
+        tmp_text_file = "/tmp/temp_speech_text.txt"
+
+        tts_file = file(tmp_text_file, "w")
+        tts_file.write(text.encode("utf8"))
         tts_file.close()
-        rospy.logdebug("File created: /tmp/temp_speech_text.txt")
 
-        os.system("iconv -f utf8 -t iso-8859-15 </tmp/temp_speech_text.txt >/tmp/temp_speech_text2.txt")
-        rospy.logdebug("File converted: /tmp/temp_speech_text2.txt")
+        rospy.loginfo("File created: %s" % tmp_text_file)
 
-        filename = "/tmp/speech.wav"
+        save_filename = '/tmp/%s.wav' % re.sub(r'(\W+| )', '', req.sentence)
+        command = self.executable + " -i {0} -k ".format(tmp_text_file) + self.key + " -o {0}".format(save_filename) 
+        rospy.loginfo("Executing cmd: %s", command)
 
-        command = self.executable + " -i /tmp/temp_speech_text2.txt -k " + self.key + " -o {0}".format(filename) + " > /dev/null 2>&1"
+        p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        rc = p.returncode
 
-        os.system(command)
+        if rc != 0:
+            rospy.logerr("Return code TTS Philips != 0: %s", stderr)
+            return False
 
-        rospy.logdebug(".wav file created: {0}".format(filename))
+        rospy.loginfo(".wav file created: {0}".format(save_filename))
 
         # Play sound
         play_req = PlayRequest()
-        play_req.audio_data = open(filename, "rb").read()
+        play_req.audio_data = open(save_filename, "rb").read()
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
         play_req.pitch = 0
@@ -96,22 +107,7 @@ class TTS(object):
         if resp.error_msg:
             rospy.logerr("Could not play sound: %s", resp.error_msg)
 
-        rospy.logdebug(".wav file played, removing temporary files")
-
-        try:
-            os.remove("/tmp/temp_speech_text.txt")
-            os.remove("/tmp/temp_speech_text2.txt")
-            # os.remove(filename)
-            rospy.logdebug("All temporary files removed, returning call")
-        except OSError, ose:
-            rospy.logerr("A file could not be removed: {0}".format(ose))
-
-        try:
-            save_filename = '/tmp/'+ ''.join(ch for ch in req.sentence if ch.isalnum()) + '.wav'
-            rospy.logdebug("Saving speech to {0}".format(save_filename))
-            os.system("mv {0} {1}".format(filename, save_filename))
-        except Exception, e:
-            rospy.logerr("Could not save speech to a new file: '{0}'".format(e, filename, save_filename))
+        rospy.loginfo(".wav file played, removing temporary files")
 
         return True
 
@@ -119,7 +115,7 @@ class TTS(object):
         filename = "/tmp/festival.wav"
 
         command = "echo \"%s\" | text2wave -o %s" % (req.sentence, filename)
-        rospy.logdebug(command)
+        rospy.loginfo(command)
 
         p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
@@ -127,7 +123,7 @@ class TTS(object):
 
         if stdout:
             rospy.logwarn(stdout)
-        rospy.logdebug(stderr)
+        rospy.loginfo(stderr)
 
         # Play sound
         play_req = PlayRequest()
