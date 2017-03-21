@@ -101,7 +101,8 @@ class TTS(object):
         rospy.loginfo(".wav file created: {0}".format(save_filename))
 
         if not os.path.isfile(save_filename):
-            return True
+            rospy.logerr("Cannot create wav file for request: {}".format(req))
+            return False
 
         # Play sound
         play_req = PlayRequest()
