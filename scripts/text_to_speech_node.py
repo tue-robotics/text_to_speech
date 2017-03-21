@@ -14,9 +14,9 @@ from std_msgs.msg import String
 from std_srvs.srv import Empty
 from text_to_speech.srv import GetStatus, Speak, SpeakRequest, Play, PlayRequest
 import re
-import sys  
+import sys
 
-reload(sys)  
+reload(sys)
 sys.setdefaultencoding('utf8')
 
 class bcolors:
@@ -82,8 +82,12 @@ class TTS(object):
 
         rospy.loginfo("File created: %s" % tmp_text_file)
 
-        save_filename = '/tmp/%s.wav' % re.sub(r'(\W+| )', '', req.sentence)
-        command = self.executable + " -i {0} -k ".format(tmp_text_file) + self.key + " -o {0}".format(save_filename) 
+        save_name = re.sub(r'(\W+| )', '', req.sentence)
+        if not save_name:
+            save_name = "empty"
+
+        save_filename = '/tmp/%s.wav' % save_name
+        command = self.executable + " -i {0} -k ".format(tmp_text_file) + self.key + " -o {0}".format(save_filename)
         rospy.loginfo("Executing cmd: %s", command)
 
         p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
@@ -95,6 +99,10 @@ class TTS(object):
             return False
 
         rospy.loginfo(".wav file created: {0}".format(save_filename))
+
+        if not os.path.isfile(save_filename):
+            rospy.logerr("Cannot create wav file for request: {}".format(req))
+            return False
 
         # Play sound
         play_req = PlayRequest()
