@@ -5,6 +5,7 @@ from text_to_speech.srv import Play, PlayRequest
 import sys
 import rospy
 
+
 def main():
     rospy.init_node('play_audio')
 
@@ -30,7 +31,7 @@ def main():
         resp = srv_play(req)
         print resp
     except rospy.ServiceException, e:
-        print "Service call failed: %s"%e
+        print "Service call failed: %s" % e
 
 if __name__ == "__main__":
     sys.exit(main())

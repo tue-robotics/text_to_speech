@@ -12,12 +12,13 @@ import os
 from std_srvs.srv import Empty
 from text_to_speech.srv import Play
 
+
 class Player(object):
 
     def __init__(self):
         # services
-        self.srv_play         = rospy.Service('play',         Play,      self.play_srv)
-        self.srv_clear_buffer = rospy.Service('clear_buffer', Empty,     self.clear_buffer_srv)
+        self.srv_play = rospy.Service('play', Play, self.play_srv)
+        self.srv_clear_buffer = rospy.Service('clear_buffer', Empty, self.clear_buffer_srv)
 
         # buffer audio requests
         self.buffer = []

@@ -19,6 +19,7 @@ import sys
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -38,25 +39,23 @@ class TTS(object):
         self.key = key
         self.pitch = pitch
 
-        self.character    = rospy.get_param("~character",    "Default")
-        self.language     = rospy.get_param("~language",     "us")
-        self.voice        = rospy.get_param("~voice",        "kyle")
-        self.emotion      = rospy.get_param("~emotion",      "Neutral")
+        self.character = rospy.get_param("~character", "Default")
+        self.language = rospy.get_param("~language", "us")
+        self.voice = rospy.get_param("~voice", "kyle")
+        self.emotion = rospy.get_param("~emotion", "Neutral")
         self.samples_path = rospy.get_param("~samples_path", os.path.expanduser("~/MEGA/media/audio/soundboard"))
 
         # topics
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
 
         # services
-        self.srv_speak        = rospy.Service('~speak',        Speak,     self.speak_srv)
+        self.srv_speak = rospy.Service('~speak', Speak, self.speak_srv)
 
         # clients
         self.client_play = rospy.ServiceProxy('play', Play)
 
         # the current active module (philips or festival)
         self.tts_module = tts_module
-
-
 
     def do_tts(self, req):
         rospy.loginfo('TTS: "' + bcolors.OKBLUE + req.sentence + bcolors.ENDC + '"')
@@ -71,8 +70,8 @@ class TTS(object):
             self.do_tts_festival(req)
 
     def do_tts_philips(self, req):
-        text  = "¬<" + req.character + ">" + '\n' # Add character
-        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n' # Add language + voice
+        text = "¬<" + req.character + ">" + '\n'  # Add character
+        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n'  # Add language + voice
         text += "¬<" + req.emotion + ">" + req.sentence
 
         tmp_text_file = "/tmp/temp_speech_text.txt"
