@@ -38,10 +38,11 @@ class TTS(object):
         self.key = key
         self.pitch = pitch
 
-        self.character = rospy.get_param("~character",  "Default")
-        self.language  = rospy.get_param("~language",   "us")
-        self.voice     = rospy.get_param("~voice",      "kyle")
-        self.emotion   = rospy.get_param("~emotion",    "Neutral")
+        self.character    = rospy.get_param("~character",    "Default")
+        self.language     = rospy.get_param("~language",     "us")
+        self.voice        = rospy.get_param("~voice",        "kyle")
+        self.emotion      = rospy.get_param("~emotion",      "Neutral")
+        self.samples_path = rospy.get_param("~samples_path", "~/MEGA/media/audio/soundboard")
 
         # topics
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
@@ -153,6 +154,22 @@ class TTS(object):
         self.do_tts(req)
 
     def speak_srv(self, req):
+        # Check if an audio file for this sentence already exists
+        for extension in ["wav", "mp3"]:
+            potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence + "." + extension)
+            rospy.logdebug("Checking for file on path: " + potential_filename)
+            if os.path.isfile(potential_filename):
+                rospy.logdebug("Found file!")
+                play_req = PlayRequest()
+                play_req.audio_data = open(potential_filename, "rb").read()
+                play_req.audio_type = extension
+                play_req.blocking_call = req.blocking_call
+                play_req.pitch = 0
+                resp = self.client_play(play_req)
+                rospy.logdebug("Response: " + resp.error_msg)
+                return ""
+
+        # No audio sample existed, continuing with TTS
         self.do_tts(req)
         return ""
 

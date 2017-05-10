@@ -24,7 +24,7 @@ class Player(object):
         self.is_playing = False
 
     def play_srv(self, req):
-        if req.audio_type not in ["wav"]:
+        if req.audio_type not in ["wav", "mp3"]:
             return "Audio format '%s' not supported" % req.audio_type
 
         self.buffer += [req]
