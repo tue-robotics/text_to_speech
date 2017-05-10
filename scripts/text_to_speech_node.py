@@ -42,7 +42,7 @@ class TTS(object):
         self.language     = rospy.get_param("~language",     "us")
         self.voice        = rospy.get_param("~voice",        "kyle")
         self.emotion      = rospy.get_param("~emotion",      "Neutral")
-        self.samples_path = rospy.get_param("~samples_path", os.path.expanduser("~/MEGA/media/audio/soundboard"))
+        self.samples_path = rospy.get_param("~samples_path", "~/MEGA/media/audio/soundboard")
 
         # topics
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
@@ -156,7 +156,7 @@ class TTS(object):
     def speak_srv(self, req):
         # Check if an audio file for this sentence already exists
         for extension in ["wav", "mp3"]:
-            potential_filename = os.path.join(self.samples_path, req.sentence + "." + extension)
+            potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence + "." + extension)
             rospy.logdebug("Checking for file on path: " + potential_filename)
             if os.path.isfile(potential_filename):
                 rospy.logdebug("Found file!")
