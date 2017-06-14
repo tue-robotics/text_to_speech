@@ -155,7 +155,6 @@ class TTS(object):
 
     def speak_srv(self, req):
         # Check if an audio file for this sentence already exists
-        # req.sentence = req.sentence.lower
         for extension in ["wav", "mp3"]:
             potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence.lower() + "." + extension)
             rospy.logdebug("Checking for file on path: " + potential_filename)
