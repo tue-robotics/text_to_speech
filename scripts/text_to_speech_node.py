@@ -64,7 +64,23 @@ class TTS(object):
             "TTS: '{0}' (module: '{1}', character: '{2}', language: '{3}', voice: '{4}', emotion: '{5}')"
             .format(req.sentence, self.tts_module, req.character, req.language, req.voice, req.emotion)
         )
+        
+        # Check if an audio file for this sentence already exists
+        for extension in ["wav", "mp3", "oga"]:
+            potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence.lower() + "." + extension)
+            rospy.logdebug("Checking for file on path: " + potential_filename)
+            if os.path.isfile(potential_filename):
+                rospy.logdebug("Found file!")
+                play_req = PlayRequest()
+                play_req.audio_data = open(potential_filename, "rb").read()
+                play_req.audio_type = extension
+                play_req.blocking_call = req.blocking_call
+                play_req.pitch = 0
+                resp = self.client_play(play_req)
+                rospy.logdebug("Response: " + resp.error_msg)
+                return ""
 
+        # No audio sample existed, continuing with TTS
         if self.tts_module == "philips":
             self.do_tts_philips(req)
         else:
@@ -154,22 +170,6 @@ class TTS(object):
         self.do_tts(req)
 
     def speak_srv(self, req):
-        # Check if an audio file for this sentence already exists
-        for extension in ["wav", "mp3", "oga"]:
-            potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence.lower() + "." + extension)
-            rospy.logdebug("Checking for file on path: " + potential_filename)
-            if os.path.isfile(potential_filename):
-                rospy.logdebug("Found file!")
-                play_req = PlayRequest()
-                play_req.audio_data = open(potential_filename, "rb").read()
-                play_req.audio_type = extension
-                play_req.blocking_call = req.blocking_call
-                play_req.pitch = 0
-                resp = self.client_play(play_req)
-                rospy.logdebug("Response: " + resp.error_msg)
-                return ""
-
-        # No audio sample existed, continuing with TTS
         self.do_tts(req)
         return ""
 
