@@ -24,7 +24,7 @@ class Player(object):
         self.is_playing = False
 
     def play_srv(self, req):
-        if req.audio_type not in ["wav", "mp3"]:
+        if req.audio_type not in ["wav", "mp3", "oga"]:
             msg = "Audio format '%s' not supported" % req.audio_type
             rospy.logerr(msg)
             return msg
