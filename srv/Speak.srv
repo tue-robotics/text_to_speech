@@ -1,3 +1,23 @@
+# The possibilities for language, voice, character and emotion are shown
+# below. Note that language and voice should correspond in order for 
+# TTS to function properly.
+
+# Language + Voice      Characters  Emotions 
+# --------   ---------  ----------  ---------
+# us         kyle       Default     Neutral  
+# us         gregory    Man         Friendly 
+# us         carlos     OldMan      Angry    
+# nl         marjolijn  OldWoman    Furious  
+# nl         david      Boy         Drill    
+#                       YoungGirl   Scared   
+#                       Robot       Emotional
+#                       Giant       Weepy    
+#                       Dwarf       Excited  
+#                       Alien       Surprised
+#                                   Sad      
+#                                   Disgusted
+#                                   Whisper
+
 string language
 string voice
 string character
