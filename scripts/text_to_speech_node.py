@@ -46,7 +46,7 @@ class TTS(object):
 
         # topics
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
-        self.pub_speak = rospy.Publisher("~output", String)
+        self.pub_speak = rospy.Publisher("~output", String, queue_size=10)
 
         # services
         self.srv_speak        = rospy.Service('~speak',        Speak,     self.speak_srv)
