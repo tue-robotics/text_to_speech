@@ -46,6 +46,7 @@ class TTS(object):
 
         # topics
         self.sub_speak = rospy.Subscriber("~input", String, self.speak)
+        self.pub_speak = rospy.Publisher("~output", String, queue_size=10)
 
         # services
         self.srv_speak        = rospy.Service('~speak',        Speak,     self.speak_srv)
@@ -85,6 +86,8 @@ class TTS(object):
             self.do_tts_philips(req)
         else:
             self.do_tts_festival(req)
+
+        self.pub_speak.publish(req.sentence)
 
     def do_tts_philips(self, req):
         text  = "¬<" + req.character + ">" + '\n' # Add character
