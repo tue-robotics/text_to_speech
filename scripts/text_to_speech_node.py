@@ -60,6 +60,8 @@ class TTS(object):
 
 
     def do_tts(self, req):
+        self.pub_speak.publish(req.sentence)
+
         rospy.loginfo('TTS: "' + bcolors.OKBLUE + req.sentence + bcolors.ENDC + '"')
         rospy.loginfo(
             "TTS: '{0}' (module: '{1}', character: '{2}', language: '{3}', voice: '{4}', emotion: '{5}')"
@@ -86,8 +88,6 @@ class TTS(object):
             self.do_tts_philips(req)
         else:
             self.do_tts_festival(req)
-
-        self.pub_speak.publish(req.sentence)
 
     def do_tts_philips(self, req):
         text  = "¬<" + req.character + ">" + '\n' # Add character
