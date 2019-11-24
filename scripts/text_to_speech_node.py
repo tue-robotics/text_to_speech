@@ -1,23 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 This node listens to a service call and a topic for text to speech
 requests. These will be processed by the festival or the philips tts module.
-'''
+"""
 
 import rospy
 import os
 
 from subprocess import Popen, PIPE
 from std_msgs.msg import String
-from std_srvs.srv import Empty
-from text_to_speech.srv import GetStatus, Speak, SpeakRequest, Play, PlayRequest
+from text_to_speech.srv import Speak, SpeakRequest, Play, PlayRequest
 import re
 import sys
 
 reload(sys)
 sys.setdefaultencoding('utf8')
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -31,17 +31,16 @@ class bcolors:
 
 
 class TTS(object):
-
     def __init__(self, tts_module, executable=None, key=None, pitch=0):
         # philips specific arguments
         self.executable = executable
         self.key = key
         self.pitch = pitch
 
-        self.character    = rospy.get_param("~character",    "Default")
-        self.language     = rospy.get_param("~language",     "us")
-        self.voice        = rospy.get_param("~voice",        "kyle")
-        self.emotion      = rospy.get_param("~emotion",      "Neutral")
+        self.character = rospy.get_param("~character", "Default")
+        self.language = rospy.get_param("~language", "us")
+        self.voice = rospy.get_param("~voice", "kyle")
+        self.emotion = rospy.get_param("~emotion", "Neutral")
         self.samples_path = rospy.get_param("~samples_path", "~/MEGA/media/audio/soundboard")
 
         # topics
@@ -49,15 +48,13 @@ class TTS(object):
         self.pub_speak = rospy.Publisher("~output", String, queue_size=10)
 
         # services
-        self.srv_speak        = rospy.Service('~speak',        Speak,     self.speak_srv)
+        self.srv_speak = rospy.Service('~speak',        Speak,     self.speak_srv)
 
         # clients
         self.client_play = rospy.ServiceProxy('play', Play)
 
         # the current active module (philips or festival)
         self.tts_module = tts_module
-
-
 
     def do_tts(self, req):
         self.pub_speak.publish(req.sentence)
@@ -67,7 +64,7 @@ class TTS(object):
             "TTS: '{0}' (module: '{1}', character: '{2}', language: '{3}', voice: '{4}', emotion: '{5}')"
             .format(req.sentence, self.tts_module, req.character, req.language, req.voice, req.emotion)
         )
-        
+
         # Check if an audio file for this sentence already exists
         for extension in ["wav", "mp3", "oga"]:
             potential_filename = os.path.join(os.path.expanduser(self.samples_path), req.sentence.lower() + "." + extension)
@@ -85,13 +82,13 @@ class TTS(object):
 
         # No audio sample existed, continuing with TTS
         if self.tts_module == "philips":
-            self.do_tts_philips(req)
+            return self.do_tts_philips(req)
         else:
-            self.do_tts_festival(req)
+            return self.do_tts_festival(req)
 
     def do_tts_philips(self, req):
-        text  = "¬<" + req.character + ">" + '\n' # Add character
-        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n' # Add language + voice
+        text = "¬<" + req.character + ">" + '\n'  # Add character
+        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n'  # Add language + voice
         text += "¬<" + req.emotion + ">" + req.sentence
 
         tmp_text_file = "/tmp/temp_speech_text.txt"
@@ -187,12 +184,14 @@ if __name__ == "__main__":
     if tts_module == "philips":
         executable = rospy.get_param('~philips_executable')
         if not executable:
-            rospy.logerr("text_to_speech_philips: missing parameter 'philips_executable'. Please provide the location of the executable as ROS parameter.")
-            exit(-1)
+            rospy.logerr("text_to_speech_philips: missing parameter 'philips_executable'."
+                         "Please provide the location of the executable as ROS parameter.")
+            exit(1)
         key = rospy.get_param('~key')
         if not key:
-            rospy.logerr("text_to_speech_philips: missing parameter 'key'. Please provide the Philips key as ROS parameter.")
-            exit(-1)
+            rospy.logerr("text_to_speech_philips: missing parameter 'key'."
+                         "Please provide the Philips key as ROS parameter.")
+            exit(1)
         # remove new lines from the key
         key = key.rstrip('\n')
 
