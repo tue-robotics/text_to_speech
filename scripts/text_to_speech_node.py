@@ -57,6 +57,9 @@ class TTS(object):
         self.tts_module = tts_module
 
     def do_tts(self, req):
+        if not req.sentence:
+            rospy.logwarn("Skipping empty sentence")
+            return ""
         self.pub_speak.publish(req.sentence)
 
         rospy.loginfo('TTS: "' + bcolors.OKBLUE + req.sentence + bcolors.ENDC + '"')
