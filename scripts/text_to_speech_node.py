@@ -113,14 +113,16 @@ class TTS(object):
         rc = p.returncode
 
         if rc != 0:
-            rospy.logerr("Return code TTS Philips != 0: %s", stderr)
-            return False
+            msg = "Return code TTS Philips != 0: {}".format(stderr)
+            rospy.logerr(msg)
+            return msg
 
         rospy.loginfo(".wav file created: {0}".format(save_filename))
 
         if not os.path.isfile(save_filename):
-            rospy.logerr("Cannot create wav file for request: {}".format(req))
-            return False
+            msg = "Cannot create wav file for request: {}".format(req)
+            rospy.logerr(msg)
+            return msg
 
         # Play sound
         play_req = PlayRequest()
@@ -142,7 +144,12 @@ class TTS(object):
 
         if stdout:
             rospy.logwarn(stdout)
-        rospy.loginfo(stderr)
+        if rc != 0:
+            msg = "Return code TTS Festival != 0: {}".format(stderr or "")
+            rospy.logerr(msg)
+            return msg
+        elif stderr:
+            rospy.logerr("TTS Festival: {}".format(stderr))
 
         # Play sound
         play_req = PlayRequest()
@@ -169,12 +176,14 @@ class TTS(object):
         req.voice = self.voice
         req.emotion = self.emotion
         req.blocking_call = False
+        rospy.logdebug("Topic:\n{}".format(req))
 
         self.do_tts(req)
 
     def speak_srv(self, req):
-        self.do_tts(req)
-        return ""
+        rospy.logdebug("Service:\n{}".format(req))
+        return self.do_tts(req)
+
 
 if __name__ == "__main__":
     rospy.init_node('text_to_speech')
