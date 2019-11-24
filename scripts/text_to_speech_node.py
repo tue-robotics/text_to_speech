@@ -79,9 +79,7 @@ class TTS(object):
                 play_req.audio_type = extension
                 play_req.blocking_call = req.blocking_call
                 play_req.pitch = 0
-                resp = self.client_play(play_req)
-                rospy.logdebug("Response: " + resp.error_msg)
-                return ""
+                return self.play(play_req)
 
         # No audio sample existed, continuing with TTS
         if self.tts_module == "philips":
@@ -130,14 +128,7 @@ class TTS(object):
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
         play_req.pitch = 0
-        resp = self.client_play(play_req)
-
-        if resp.error_msg:
-            rospy.logerr("Could not play sound: %s", resp.error_msg)
-
-        rospy.loginfo(".wav file played, removing temporary files")
-
-        return True
+        return self.play(play_req)
 
     def do_tts_festival(self, req):
         filename = "/tmp/festival.wav"
@@ -159,7 +150,16 @@ class TTS(object):
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
         play_req.pitch = 0
+        return self.play(play_req)
+
+    def play(self, play_req):
         resp = self.client_play(play_req)
+        if resp.error_msg:
+            msg = "Could not play sound: {}".format(resp.error_msg)
+            rospy.logerr(msg)
+            return msg
+
+        return resp.error_msg
 
     def speak(self, sentence_msg):
         req = SpeakRequest()
