@@ -48,7 +48,7 @@ class TTS(object):
         self.pub_speak = rospy.Publisher("~output", String, queue_size=10)
 
         # services
-        self.srv_speak = rospy.Service('~speak',        Speak,     self.speak_srv)
+        self.srv_speak = rospy.Service('~speak', Speak, self.speak_srv)
 
         # clients
         self.client_play = rospy.ServiceProxy('play', Play)
