@@ -57,8 +57,8 @@ class TTS(object):
         self.tts_module = tts_module
 
     def do_tts(self, req):
-        if not req.sentence:
-            rospy.logwarn("Skipping empty sentence")
+        if not req.sentence.strip():
+            rospy.logwarn("Skipping empty sentence: {}".format(repr(req.sentence)))
             return ""
         self.pub_speak.publish(req.sentence)
 
