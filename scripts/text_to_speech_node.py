@@ -44,7 +44,7 @@ class TTS(object):
         self.samples_path = rospy.get_param("~samples_path", "~/MEGA/media/audio/soundboard")
 
         # topics
-        self.sub_speak = rospy.Subscriber("~input", String, self.speak)
+        self.sub_speak = rospy.Subscriber("~input", String, self.speak_topic)
         self.pub_speak = rospy.Publisher("~output", String, queue_size=10)
 
         # services
@@ -168,7 +168,7 @@ class TTS(object):
 
         return resp.error_msg
 
-    def speak(self, sentence_msg):
+    def speak_topic(self, sentence_msg):
         req = SpeakRequest()
         req.sentence = sentence_msg.data
         req.character = self.character
