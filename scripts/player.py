@@ -70,11 +70,15 @@ class Player(object):
         self.buffer = []
         return []
 
+
 if __name__ == "__main__":
     rospy.init_node('audio_player')
 
     player = Player()
 
-    while not rospy.is_shutdown():
-        player.step()
-        rospy.sleep(0.1)
+    try:
+        while not rospy.is_shutdown():
+            player.step()
+            rospy.sleep(0.1)
+    except rospy.ROSInterruptException:
+            pass
