@@ -81,4 +81,4 @@ if __name__ == "__main__":
             player.step()
             rospy.sleep(0.1)
     except rospy.ROSInterruptException:
-            pass
+        pass
