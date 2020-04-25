@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-'''
+"""
 This node listens to a service call and a topic for text to speech
 requests. These will be processed by the festival or the philips tts module.
-'''
+"""
 
 import rospy
 import os
 
 from std_srvs.srv import Empty
 from text_to_speech.srv import Play
+
 
 class Player(object):
 
