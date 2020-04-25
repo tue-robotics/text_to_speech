@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-'''
+"""
 This node listens to a service call and a topic for text to speech
 requests. These will be processed by the festival or the philips tts module.
-'''
+"""
 
 import rospy
 import os
 
 from std_srvs.srv import Empty
 from text_to_speech.srv import Play
+
 
 class Player(object):
 
@@ -69,11 +70,15 @@ class Player(object):
         self.buffer = []
         return []
 
+
 if __name__ == "__main__":
     rospy.init_node('audio_player')
 
     player = Player()
 
-    while not rospy.is_shutdown():
-        player.step()
-        rospy.sleep(0.1)
+    try:
+        while not rospy.is_shutdown():
+            player.step()
+            rospy.sleep(0.1)
+    except rospy.ROSInterruptException:
+            pass
