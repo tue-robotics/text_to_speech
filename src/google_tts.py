@@ -25,7 +25,7 @@ def parseText(text):
     toSay.append(w.strip()) # save the word as a sentence
    sentence = '' # start another sentence
   else:
-   if (len(sentence)+len(w)+1 < 100):   
+   if (len(sentence)+len(w)+1 < 100):
     sentence += ' '+w # add the word
    else:
     toSay.append(sentence.strip()) # save the sentence
@@ -50,7 +50,7 @@ def tts(text, language='en'):
     if ping_google():
         try:
             google_tts(text, language)
-        except Exception, ex:
+        except Exception as ex:
             rospy.logerr(ex)
             festival_tts(text)
     else:
@@ -88,7 +88,7 @@ def google_tts(text, language='en'):
 
     generation_end = time.time()
     rospy.loginfo("Downloading audio took {0}s".format(generation_end - generation_start))
-    
+
     filenames = " ".join(files)
     play_start = time.time()
 
@@ -105,7 +105,7 @@ def speak_up(str_msg):
     try:
         tts(str_msg.data)
         return True
-    except Exception, e:
+    except Exception as e:
         rospy.logerr(e)
         return False
     return False
@@ -118,7 +118,7 @@ def speak_up_advanced(req):
         rospy.loginfo("Perfoming TTS in language {0.language} for sentence: '{0.sentence}'".format(req))
         tts(req.sentence, req.language)
         return "True"
-    except Exception, e: 
+    except Exception as e:
         rospy.logerr(e)
         return "False"
     return "False"
@@ -126,12 +126,12 @@ def speak_up_advanced(req):
 if __name__ == "__main__":
     rospy.init_node('text_to_speech_google')
     language = rospy.get_param("/text_to_speech/language",   "us")
-    
+
     subscriber  = rospy.Subscriber("/text_to_speech/input", String, speak_up)
 
     rospy.Service('/text_to_speech/speak', Speak, speak_up_advanced)
 
     rospy.loginfo("Listener /text_to_speech/input and Service amigo_speakup_advanced started")
     rospy.logwarn("Google TTS does not take voice and emotion into account")
-    
+
     rospy.spin()
