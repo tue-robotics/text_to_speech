@@ -15,8 +15,13 @@ from text_to_speech.srv import Speak, SpeakRequest, Play, PlayRequest
 import re
 import sys
 
-reload(sys)
-sys.setdefaultencoding('utf8')
+try:
+    # Python 2
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except (NameError, AttributeError):
+    # Python 3; unicode is already the default
+    pass
 
 
 class bcolors:
