@@ -16,9 +16,11 @@ import re
 import sys
 
 try:
+    # Python 2
     reload(sys)
     sys.setdefaultencoding('utf8')
 except (NameError, AttributeError):
+    # Python 3; unicode is already the default
     pass
 
 
