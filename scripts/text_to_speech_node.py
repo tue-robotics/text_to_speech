@@ -99,9 +99,8 @@ class TTS(object):
 
         tmp_text_file = "/tmp/temp_speech_text.txt"
 
-        tts_file = file(tmp_text_file, "w")
-        tts_file.write(text.encode("utf8"))
-        tts_file.close()
+        with open(tmp_text_file, "w") as tts_file:
+            tts_file.write(text.encode("utf8"))
 
         rospy.loginfo("File created: %s" % tmp_text_file)
 
