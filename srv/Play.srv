@@ -2,8 +2,5 @@ string audio_type    # wav, mp3
 uint8[] audio_data
 bool blocking_call
 
-# Playing parameters
-int32 pitch
-
 ---
 string error_msg

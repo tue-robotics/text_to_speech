@@ -48,7 +48,7 @@ class Player(object):
         with open(filename, "wb") as f:
             f.write(bytearray(req.audio_data))
 
-        err_code = os.system("play %s pitch %i > /dev/null 2>&1" % (filename, req.pitch))
+        err_code = os.system("play %s > /dev/null 2>&1" % (filename))
 
         if err_code:
             rospy.logerr("Could not play %s: return code: %i" % (filename, err_code))

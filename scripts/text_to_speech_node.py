@@ -36,11 +36,10 @@ class bcolors:
 
 
 class TTS(object):
-    def __init__(self, tts_module, executable=None, key=None, pitch=0):
+    def __init__(self, tts_module, executable=None, key=None):
         # philips specific arguments
         self.executable = executable
         self.key = key
-        self.pitch = pitch
 
         self.character = rospy.get_param("~character", "Default")
         self.language = rospy.get_param("~language", "us")
@@ -83,7 +82,6 @@ class TTS(object):
                 play_req.audio_data = open(potential_filename, "rb").read()
                 play_req.audio_type = extension
                 play_req.blocking_call = req.blocking_call
-                play_req.pitch = 0
                 return self.play(play_req)
 
         # No audio sample existed, continuing with TTS
@@ -133,7 +131,6 @@ class TTS(object):
         play_req.audio_data = open(save_filename, "rb").read()
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
-        play_req.pitch = 0
         return self.play(play_req)
 
     def do_tts_festival(self, req):
@@ -160,7 +157,6 @@ class TTS(object):
         play_req.audio_data = open(filename, "rb").read()
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
-        play_req.pitch = 0
         return self.play(play_req)
 
     def play(self, play_req):
@@ -193,7 +189,6 @@ if __name__ == "__main__":
     rospy.init_node('text_to_speech')
 
     tts_module = rospy.get_param('~tts_module')
-    pitch = rospy.get_param('~pitch', 0)
     executable = None
     key = None
 
@@ -211,6 +206,6 @@ if __name__ == "__main__":
         # remove new lines from the key
         key = key.rstrip('\n')
 
-    tts = TTS(tts_module, executable, key, pitch)
+    tts = TTS(tts_module, executable, key)
 
     rospy.spin()
