@@ -7,6 +7,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+catkin_python_setup()
+
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
