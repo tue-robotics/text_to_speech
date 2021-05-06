@@ -1,8 +1,11 @@
-string language
-string voice
-string character
-string emotion
 string sentence
+
+string language # Only for Philips, Google
+string character # Only for Philips
+string emotion # Only for Philips
+string voice # Only for Philips
+
+bool slow # Only for Google
 
 # Set to true if you want the call to block until speech is finished
 bool blocking_call

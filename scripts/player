@@ -6,22 +6,27 @@ This node listens to a service call and a topic for text to speech
 requests. These will be processed by the festival or the philips tts module.
 """
 
+from collections import deque
+
 import rospy
-import os
 
 from std_srvs.srv import Empty
 from text_to_speech.srv import Play
+from text_to_speech.funcs import play_file
+
+from threading import Event
+import time
 
 
 class Player(object):
 
     def __init__(self):
         # services
-        self.srv_play         = rospy.Service('~play',         Play,      self.play_srv)
-        self.srv_clear_buffer = rospy.Service('~clear_buffer', Empty,     self.clear_buffer_srv)
+        self.srv_play = rospy.Service('~play', Play, self.play_srv)
+        self.srv_clear_buffer = rospy.Service('~clear_buffer', Empty, self.clear_buffer_srv)
 
         # buffer audio requests
-        self.buffer = []
+        self.buffer = deque()
         self.is_playing = False
 
     def play_srv(self, req):
@@ -30,28 +35,28 @@ class Player(object):
             rospy.logerr(msg)
             return msg
 
-        self.buffer += [req]
-
+        wait_event = None
         if req.blocking_call:
-            while not rospy.is_shutdown() and self.buffer:
-                self.step()
-                rospy.sleep(0.01)
+            wait_event = Event()
+        self.buffer.append((req, wait_event))
+
+        if wait_event is not None:
+            wait_event.wait()
 
         return ""
 
     def play(self, req):
         self.is_playing = True
 
-        import time
         filename = time.strftime("/tmp/%Y-%m-%d-%H-%M-%S") + "." + req.audio_type
 
         with open(filename, "wb") as f:
             f.write(bytearray(req.audio_data))
 
-        err_code = os.system("play %s > /dev/null 2>&1" % (filename))
+        rc = play_file(filename)
 
-        if err_code:
-            rospy.logerr("Could not play %s: return code: %i" % (filename, err_code))
+        if rc:
+            rospy.logerr("Could not play {}: return code: {}".format(filename, rc))
 
         self.is_playing = False
 
@@ -59,16 +64,19 @@ class Player(object):
         if not self.buffer or self.is_playing:
             return
 
+        req, wait_event = self.buffer.popleft()
+
         # Play first request from the buffer
-        self.play(self.buffer[0])
+        self.play(req)
+        if wait_event is not None:
+            wait_event.set()
 
-        # If the buffer was not emptied in the meantime, pop the first request
-        if self.buffer:
-            self.buffer.pop(0)
-
-    def clear_buffer_srv(self, req):
-        self.buffer = []
-        return []
+    def clear_buffer_srv(self, req=None):
+        for item in self.buffer:
+            wait_event = item[1]
+            if wait_event is not None:
+                wait_event.set()
+        self.buffer.clear()
 
 
 if __name__ == "__main__":

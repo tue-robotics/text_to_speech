@@ -12,6 +12,7 @@ import os
 from subprocess import Popen, PIPE
 from std_msgs.msg import String
 from text_to_speech.srv import Speak, SpeakRequest, Play, PlayRequest
+from text_to_speech.funcs import festival_to_file
 import re
 import sys
 
@@ -136,21 +137,7 @@ class TTS(object):
     def do_tts_festival(self, req):
         filename = "/tmp/festival.wav"
 
-        command = "echo \"%s\" | text2wave -o %s" % (req.sentence, filename)
-        rospy.loginfo(command)
-
-        p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        rc = p.returncode
-
-        if stdout:
-            rospy.logwarn(stdout)
-        if rc != 0:
-            msg = "Return code TTS Festival != 0: {}".format(stderr or "")
-            rospy.logerr(msg)
-            return msg
-        elif stderr:
-            rospy.logerr("TTS Festival: {}".format(stderr))
+        festival_to_file(req.sentence, filename)
 
         # Play sound
         play_req = PlayRequest()

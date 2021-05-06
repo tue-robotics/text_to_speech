@@ -2,6 +2,7 @@
 
 from text_to_speech.srv import Play, PlayRequest
 
+from os import path
 import sys
 import rospy
 
@@ -10,7 +11,7 @@ def main():
     rospy.init_node('play_audio')
 
     if len(sys.argv) != 3:
-        print("Usage: play.py FILENAME SERVICE_NAME")
+        print("Usage: play FILENAME SERVICE_NAME")
         return 1
 
     filename = sys.argv[1]
@@ -22,8 +23,10 @@ def main():
         srv_play = rospy.ServiceProxy(service_name, Play)
 
         req = PlayRequest()
-        req.audio_type = "wav"
-        req.audio_data = open(filename, "rb").read()
+        ext = path.splitext(filename)[-1]
+        req.audio_type = ext.lstrip(".")
+        with open(filename, "rb") as f:
+            req.audio_data = f.read()
         req.blocking_call = False
 
         resp = srv_play(req)
