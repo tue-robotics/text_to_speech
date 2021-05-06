@@ -11,7 +11,7 @@ from collections import deque
 import rospy
 
 from std_srvs.srv import Empty
-from text_to_speech.srv import Play
+from text_to_speech_msgs.srv import Play
 from text_to_speech.funcs import play_file
 
 from threading import Event

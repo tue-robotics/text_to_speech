@@ -1,6 +1,6 @@
 #! /usr/bin/python
 
-from text_to_speech.srv import Play, PlayRequest
+from text_to_speech_msgs.srv import Play, PlayRequest
 
 from os import path
 import sys

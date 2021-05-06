@@ -11,7 +11,7 @@ import os
 
 from subprocess import Popen, PIPE
 from std_msgs.msg import String
-from text_to_speech.srv import Speak, SpeakRequest, Play, PlayRequest
+from text_to_speech_msgs.srv import Speak, SpeakRequest, Play, PlayRequest
 from text_to_speech.funcs import festival_to_file
 import re
 import sys

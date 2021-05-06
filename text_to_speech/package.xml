@@ -19,12 +19,10 @@
   <depend>python3-gTTS-pip</depend>
   <depend>rospy</depend>
   <depend>std_msgs</depend>
-
-  <build_depend>message_generation</build_depend>
+  <depend>text_to_speech_msgs</depend>
 
   <exec_depend>festival</exec_depend>
   <exec_depend>gstreamer1.0-tools</exec_depend>
-  <exec_depend>message_runtime</exec_depend>
   <exec_depend>sox</exec_depend>
 
 </package>

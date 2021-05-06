@@ -2,7 +2,7 @@
 """Adapted from http://glowingpython.blogspot.nl/2012/11/text-to-speech-with-correct-intonation.html"""
 
 import rospy
-from text_to_speech.srv import Speak
+from text_to_speech_msgs.srv import Speak
 from text_to_speech.funcs import festival_to_file, google_tts_to_file, play_file
 from std_msgs.msg import String
 import time
