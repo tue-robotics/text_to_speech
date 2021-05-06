@@ -1,7 +1,18 @@
+# -*- coding: utf-8 -*-
+
 from gtts import gTTS, gTTSError
 import re
 import rospy
 from subprocess import Popen, PIPE
+
+import sys
+try:
+    # Python 2
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+except (NameError, AttributeError):
+    # Python 3; unicode is already the default
+    pass
 
 
 def _command(command, label=""):
