@@ -28,7 +28,6 @@ class QueuedActionServer(ABC):
         self.lock = threading.RLock()
         self.execute_condition = threading.Condition(self.lock)
 
-        self.terminate_mutex = threading.RLock()
         self.need_to_terminate = False
 
         self._server = ActionServer(ns, action_spec, self._goal_cb, self._cancel_cb, auto_start=False)
@@ -47,8 +46,7 @@ class QueuedActionServer(ABC):
         self._server.start()
 
     def __del__(self):
-        with self.terminate_mutex:
-            self.need_to_terminate = True
+        self.need_to_terminate = True
 
         if hasattr(self, "execute_thread") and self.execute_thread:
             self.execute_thread.join()
@@ -80,9 +78,8 @@ class QueuedActionServer(ABC):
         rate = rospy.Rate(self.feedback_rate)
 
         while not rospy.is_shutdown():
-            with self.terminate_mutex:
-                if self.need_to_terminate:
-                    break
+            if self.need_to_terminate:
+                break
 
             if self.active:
                 with self._server.lock, self.lock:
@@ -111,9 +108,8 @@ class QueuedActionServer(ABC):
         rate = rospy.Rate(self.execute_rate)
 
         while not rospy.is_shutdown():
-            with self.terminate_mutex:
-                if self.need_to_terminate:
-                    break
+            if self.need_to_terminate:
+                break
 
             assert not self.active, "There shouldn't be an active goal at a new iteration of the execution loop"
 
