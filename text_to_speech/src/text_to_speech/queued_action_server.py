@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from actionlib import ActionServer
+from actionlib import ActionServer, server_goal_handle
 from collections import deque
 import rospy
 import threading
@@ -11,6 +11,7 @@ class QueuedActionServer(ABC):
     Action Server wrapper which implements a buffers to handle all requests in
     receiving order
     """
+
     def __init__(self, ns, action_spec, execute_rate=5, threaded_feedback=True, feedback_rate=5):
         """
 
@@ -54,12 +55,12 @@ class QueuedActionServer(ABC):
         if hasattr(self, "feedback_thread") and self.feedback_thread:
             self.feedback_thread.join()
 
-    def _goal_cb(self, gh):
+    def _goal_cb(self, gh: server_goal_handle):
         with self._server.lock, self.lock:
             rospy.logdebug(f"New goal:\n{gh.get_goal()}")
             self.buffer.append(gh)
 
-    def _cancel_cb(self, gh):
+    def _cancel_cb(self, gh: server_goal_handle):
         with self._server.lock, self.lock:
             rospy.logdebug(f"Cancelling goal:\n{gh.get_goal()}")
 
@@ -91,8 +92,9 @@ class QueuedActionServer(ABC):
                     rospy.logerr(f"Exception in your generate_feedback: {e}\n{traceback.format_exc()}")
                 else:
                     if feedback is not None:
-                        assert isinstance(feedback, self._feedback_type),\
-                            f"Return of generate_feedback should be a {self._feedback_type}"
+                        assert isinstance(
+                            feedback, self._feedback_type
+                        ), f"Return of generate_feedback should be a {self._feedback_type}"
                         goal.publish_feedback(feedback)
 
             rate.sleep()
@@ -127,10 +129,11 @@ class QueuedActionServer(ABC):
                         gh.set_aborted(None, f"Exception in execute callback: {e}")
                         self.active_gh = None
                 else:
-                    rospy.loginfo(f"Succeeded: {gh.get_goal_id()}", )
+                    rospy.loginfo(f"Succeeded: {gh.get_goal_id()}")
                     if result is not None:
-                        assert isinstance(result, self._result_type),\
-                            f"Return of execute_cb should be a {self._result_type}"
+                        assert isinstance(
+                            result, self._result_type
+                        ), f"Return of execute_cb should be a {self._result_type}"
                     with self._server.lock, self.lock:
                         gh.set_succeeded(result)
                         self.active_gh = None
@@ -142,7 +145,7 @@ class QueuedActionServer(ABC):
         return self._active_gh
 
     @active_gh.setter
-    def active_gh(self, gh):
+    def active_gh(self, gh: server_goal_handle):
         self._active_gh = gh
 
     @property
@@ -150,13 +153,13 @@ class QueuedActionServer(ABC):
         return bool(self.active_gh)
 
     @abstractmethod
-    def execute_cb(self, gh):
+    def execute_cb(self, gh: server_goal_handle):
         raise NotImplementedError
 
     @abstractmethod
-    def cancel_cb(self, gh):
+    def cancel_cb(self, gh: server_goal_handle):
         raise NotImplementedError
 
     @abstractmethod
-    def generate_feedback(self, gh):
+    def generate_feedback(self, gh: server_goal_handle):
         raise NotImplementedError
