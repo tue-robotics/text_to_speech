@@ -68,12 +68,23 @@ class QueuedActionServer(ABC):
                 try:
                     self.buffer.remove(gh)
                 except ValueError:
-                    rospy.logerr(f"Tried to remove goal:\n{gh}\n, which is not in the que:\n{self.buffer}")
+                    msg = f"Tried to remove goal:\n{gh}\n, which is not in the que:\n{self.buffer}"
+                    rospy.logerr(msg)
+                    gh.set_canceled(text=msg)
+                else:
+                    gh.set_canceled()
+                    return
 
             try:
-                self.cancel_cb(gh)
+                result = self.cancel_cb(gh)
             except Exception as e:
-                rospy.logerr(f"Failure during cancel_cb of goal: `{gh}`:\n{e}\n{traceback.format_exc()}")
+                msg = f"Failure during cancel_cb of goal: `{gh}`:\n{e}\n{traceback.format_exc()}"
+                rospy.logerr(msg)
+                gh.set_canceled(text=msg)
+            else:
+                gh.set_canceled(result=result)
+            finally:
+                self.active_gh = None
 
     def publish_feedback_loop(self):
         rate = rospy.Rate(self.feedback_rate)
