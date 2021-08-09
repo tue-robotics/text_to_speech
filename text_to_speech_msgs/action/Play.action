@@ -1,0 +1,9 @@
+# Goal
+string audio_type   # wav, mp3
+uint8[] audio_data
+
+---
+# Result
+---
+# Feedback
+duration remaining_time
