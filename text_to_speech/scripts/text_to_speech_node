@@ -9,19 +9,9 @@ requests. These will be processed by the festival or the philips tts module.
 import rospy
 import os
 
-from subprocess import Popen, PIPE
 from std_msgs.msg import String
-from text_to_speech.srv import Speak, SpeakRequest, Play, PlayRequest
-import re
-import sys
-
-try:
-    # Python 2
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-except (NameError, AttributeError):
-    # Python 3; unicode is already the default
-    pass
+from text_to_speech_msgs.srv import Speak, SpeakRequest, Play, PlayRequest
+from text_to_speech.funcs import festival_to_file, philips_tts_to_file
 
 
 class bcolors:
@@ -36,11 +26,10 @@ class bcolors:
 
 
 class TTS(object):
-    def __init__(self, tts_module, executable=None, key=None, pitch=0):
+    def __init__(self, tts_module, executable=None, key=None):
         # philips specific arguments
         self.executable = executable
         self.key = key
-        self.pitch = pitch
 
         self.character = rospy.get_param("~character", "Default")
         self.language = rospy.get_param("~language", "us")
@@ -83,7 +72,6 @@ class TTS(object):
                 play_req.audio_data = open(potential_filename, "rb").read()
                 play_req.audio_type = extension
                 play_req.blocking_call = req.blocking_call
-                play_req.pitch = 0
                 return self.play(play_req)
 
         # No audio sample existed, continuing with TTS
@@ -93,75 +81,36 @@ class TTS(object):
             return self.do_tts_festival(req)
 
     def do_tts_philips(self, req):
-        text = "¬<" + req.character + ">" + '\n'  # Add character
-        text += "¬<speaker=" + req.language + "_" + req.voice + ">" + '\n'  # Add language + voice
-        text += "¬<" + req.emotion + ">" + req.sentence
-
-        tmp_text_file = "/tmp/temp_speech_text.txt"
-
-        tts_file = file(tmp_text_file, "w")
-        tts_file.write(text.encode("utf8"))
-        tts_file.close()
-
-        rospy.loginfo("File created: %s" % tmp_text_file)
-
-        save_name = re.sub(r'(\W+| )', '', req.sentence)
-        if not save_name:
-            save_name = "empty"
-
-        save_filename = '/tmp/%s.wav' % save_name
-        command = self.executable + " -i {0} -k ".format(tmp_text_file) + self.key + " -o {0}".format(save_filename)
-        rospy.loginfo("Executing cmd: %s", command)
-
-        p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        rc = p.returncode
-
-        if rc != 0:
-            msg = "Return code TTS Philips != 0: {}".format(stderr)
-            rospy.logerr(msg)
-            return msg
-
-        rospy.loginfo(".wav file created: {0}".format(save_filename))
-
-        if not os.path.isfile(save_filename):
-            msg = "Cannot create wav file for request: {}".format(req)
+        try:
+            output_filename = philips_tts_to_file(self.executable, self.key, req.sentence, req.language, req.emotion,
+                                                  req.voice)
+        except Exception as e:
+            msg = "Error during generation of audio file with Philips TTS: {}".format(e)
             rospy.logerr(msg)
             return msg
 
         # Play sound
         play_req = PlayRequest()
-        play_req.audio_data = open(save_filename, "rb").read()
+        with open(output_filename, "rb") as f:
+            play_req.audio_data = f.read()
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
-        play_req.pitch = 0
         return self.play(play_req)
 
     def do_tts_festival(self, req):
-        filename = "/tmp/festival.wav"
-
-        command = "echo \"%s\" | text2wave -o %s" % (req.sentence, filename)
-        rospy.loginfo(command)
-
-        p = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        rc = p.returncode
-
-        if stdout:
-            rospy.logwarn(stdout)
-        if rc != 0:
-            msg = "Return code TTS Festival != 0: {}".format(stderr or "")
+        try:
+            output_filename = festival_to_file(req.sentence)
+        except Exception as e:
+            msg = "Error during generation of audio file with Festival TTS: {}".format(e)
             rospy.logerr(msg)
             return msg
-        elif stderr:
-            rospy.logerr("TTS Festival: {}".format(stderr))
 
         # Play sound
         play_req = PlayRequest()
-        play_req.audio_data = open(filename, "rb").read()
+        with open(output_filename, "rb") as f:
+            play_req.audio_data = f.read()
         play_req.audio_type = "wav"
         play_req.blocking_call = req.blocking_call
-        play_req.pitch = 0
         return self.play(play_req)
 
     def play(self, play_req):
@@ -194,7 +143,6 @@ if __name__ == "__main__":
     rospy.init_node('text_to_speech')
 
     tts_module = rospy.get_param('~tts_module')
-    pitch = rospy.get_param('~pitch', 0)
     executable = None
     key = None
 
@@ -212,6 +160,6 @@ if __name__ == "__main__":
         # remove new lines from the key
         key = key.rstrip('\n')
 
-    tts = TTS(tts_module, executable, key, pitch)
+    tts = TTS(tts_module, executable, key)
 
     rospy.spin()

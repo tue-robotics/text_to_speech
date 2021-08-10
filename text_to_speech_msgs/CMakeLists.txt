@@ -1,14 +1,24 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(text_to_speech)
+project(text_to_speech_msgs)
 
 find_package(catkin REQUIRED COMPONENTS
-  rospy
-  std_msgs
+  actionlib_msgs
   message_generation
 )
 
-## Generate services in the 'srv' folder
+add_action_files(
+   DIRECTORY
+   action
+   FILES
+   Play.action
+   Speak.action
+)
+
+
+## Generate services
 add_service_files(
+  DIRECTORY
+  srv
   FILES
   GetStatus.srv
   Speak.srv
@@ -17,18 +27,14 @@ add_service_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-  DEPENDENCIES
-  std_msgs
+  DEPENDENCIES actionlib_msgs
 )
 
 ###################################
 ## catkin specific configuration ##
 ###################################
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES text_to_speech
-  CATKIN_DEPENDS rospy std_msgs message_runtime
-#  DEPENDS system_lib
+  CATKIN_DEPENDS actionlib_msgs message_runtime
 )
 
 ###########
