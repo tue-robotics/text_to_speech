@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 import os
 TTS_EXE_FILE = "../exec/ptts_v911.exe"
 filename = "/tmp/speech.wav"

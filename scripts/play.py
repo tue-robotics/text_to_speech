@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 from text_to_speech.srv import Play, PlayRequest
 

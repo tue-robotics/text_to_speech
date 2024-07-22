@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#! /usr/bin/env python
 '''Adapted from http://glowingpython.blogspot.nl/2012/11/text-to-speech-with-correct-intonation.html'''
 
 import roslib; roslib.load_manifest('text_to_speech_google')
